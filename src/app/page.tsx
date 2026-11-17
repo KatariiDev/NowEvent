@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { demoStore, fetchEvents, fetchNotifications, fetchTopics, fetchUsers } from "@/lib/api";
 import { useRealtime } from "@/hooks/useRealtime";
-import { Badge, Card, DemoBanner, ErrorBox, LiveBadge, StatCard } from "@/components/ui";
+import { Badge, Card, DemoBanner, ErrorBox, StatCard } from "@/components/ui";
 import type { EventItem, NotificationLog, Student, Topic } from "@/types";
 
 function formatTime(iso: string): string {
@@ -56,7 +56,7 @@ export default function DashboardPage() {
     load();
   }, [load]);
 
-  const { status, lastUpdate, refresh } = useRealtime({ onPoll: load, demo });
+  const { lastUpdate, refresh } = useRealtime({ onPoll: load, demo });
 
   const sent = notifications.filter((n) => n.status === "sent" || n.status === "delivered");
   const totalSuccess = notifications.reduce((s, n) => s + (n.successCount ?? 0), 0);
@@ -90,7 +90,6 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <LiveBadge status={status} />
           <button
             onClick={refresh}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"

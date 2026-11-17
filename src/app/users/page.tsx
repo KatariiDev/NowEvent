@@ -20,7 +20,6 @@ import {
   DemoBanner,
   EmptyState,
   Field,
-  LiveBadge,
   Modal,
   inputClass,
 } from "@/components/ui";
@@ -95,7 +94,7 @@ export default function UsersPage() {
     load();
   }, [load]);
 
-  const { status, refresh } = useRealtime({
+  const { refresh } = useRealtime({
     demo,
     onPoll: load,
     // BE chưa có hợp đồng SSE — mọi message SSE (nếu có) chỉ kích hoạt tải lại.
@@ -227,7 +226,6 @@ export default function UsersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <LiveBadge status={status} />
           <button
             onClick={refresh}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"

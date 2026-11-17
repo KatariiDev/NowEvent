@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { RealtimeStatus } from "@/hooks/useRealtime";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
@@ -69,26 +68,6 @@ export function Badge({
       {children}
     </span>
   );
-}
-
-export function LiveBadge({ status }: { status: RealtimeStatus }) {
-  if (status === "live")
-    return (
-      <Badge tone="green">
-        <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-        LIVE — SSE
-      </Badge>
-    );
-  if (status === "polling")
-    return (
-      <Badge tone="blue">
-        <span className="mr-1.5 inline-block h-2 w-2 animate-pulse rounded-full bg-sky-500" />
-        LIVE — Polling 5s
-      </Badge>
-    );
-  if (status === "paused") return <Badge tone="amber">TẠM DỪNG — tab đang ẩn</Badge>;
-  if (status === "demo") return <Badge tone="amber">DEMO MODE — BE không kết nối được</Badge>;
-  return <Badge tone="slate">Đang kết nối…</Badge>;
 }
 
 export function DemoBanner() {
