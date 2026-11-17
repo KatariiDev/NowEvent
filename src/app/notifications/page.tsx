@@ -35,6 +35,13 @@ const STATUS_LABEL: Record<NotificationStatus, string> = {
   pending: "Đang chờ",
 };
 
+/** "850ms" hoặc "1,2s" — null khi BE chưa trả thời gian gửi. */
+function formatDuration(ms?: number): string | null {
+  if (ms == null) return null;
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(1).replace(".", ",")}s`;
+}
+
 export default function NotificationsPage() {
   const [logs, setLogs] = useState<NotificationLog[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -123,7 +130,10 @@ export default function NotificationsPage() {
       };
       const created = demo ? demoSendNotification(input) : await sendNotification(input);
       setLogs((prev) => [created, ...prev]);
-      setSendOk(`Đã gửi qua FCM — condition: ${created.condition}`);
+      const took = formatDuration(created.durationMs);
+      setSendOk(
+        `Đã gửi qua FCM${took ? ` trong ${took}` : ""} — condition: ${created.condition}`,
+      );
       setTitle("");
       setBody("");
       setEventId("");
@@ -308,6 +318,9 @@ export default function NotificationsPage() {
                         <p className="mt-1 text-xs text-slate-500">
                           {n.targetDescription} · {new Date(n.sentAt).toLocaleString("vi-VN")} ·
                           Thành công {n.successCount ?? 0}, lỗi {n.failureCount ?? 0}
+                          {formatDuration(n.durationMs)
+                            ? ` · Gửi trong ${formatDuration(n.durationMs)}`
+                            : ""}
                           {n.error ? ` · Lỗi: ${n.error}` : ""}
                         </p>
                       </div>
