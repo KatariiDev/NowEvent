@@ -2,8 +2,8 @@
 
 Web dashboard (FE-only) để quản lý hệ thống thông báo sự kiện của Đoàn trường:
 BE cào dữ liệu từ web Đoàn trường, lưu sự kiện vào DB và gửi thông báo FCM;
-dashboard này hiển thị và quản lý toàn bộ: sự kiện cào về, người dùng
-(= client đăng ký nhận thông báo), topic FCM và lịch sử gửi thông báo —
+dashboard này hiển thị và quản lý toàn bộ: sinh viên đăng ký, sự kiện cào về,
+danh sách đăng ký theo sự kiện, topic FCM và lịch sử gửi thông báo —
 **realtime, không cần tải lại trang**.
 
 ## Bài toán
@@ -23,7 +23,7 @@ dashboard này hiển thị và quản lý toàn bộ: sự kiện cào về, ng
 Web Đoàn trường
       │  (cào: 75 luồng = 15 khoa × 5 khóa, tối đa 5–10 luồng cùng lúc)
       ▼
-BE cào (đã có sẵn) ──► Database (bảng events, clients, topics, notifications)
+BE cào (đã có sẵn) ──► Database (users, events, registrations)
       │  gửi FCM qua Firebase Admin SDK (service account chỉ nằm phía BE)
       ▼
 Firebase Cloud Messaging ──► Điện thoại sinh viên (đăng ký 2 topic)
@@ -38,15 +38,15 @@ gửi thông báo qua `POST /api/notifications/send` — việc gửi FCM thật
 
 ## Tính năng
 
-| Trang            | Nội dung                                                                                                                                                                                                                                                      |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/` Tổng quan    | Tổng sự kiện, client hoạt động, thông báo đã gửi, tỉ lệ gửi thành công, biểu đồ 7 ngày, sự kiện mới nhất                                                                                                                                                      |
-| `/login`         | Đăng nhập bằng email + mật khẩu (ghi nhớ đăng nhập, hiện/ẩn mật khẩu, quên mật khẩu → liên hệ quản trị viên); chưa đăng nhập thì mọi trang đều chuyển về đây; tài khoản demo khi BE không kết nối được                                                        |
-| `/events`        | Danh sách sự kiện cào về + tìm kiếm/lọc theo khoa, khóa, trạng thái; drawer chi tiết (kèm FCM condition xem trước); tạo/sửa/xóa; đánh dấu đã gửi / bỏ qua                                                                                                     |
-| `/clients`       | Người dùng (Client) — 1 người = 1 client: họ và tên, mã lớp, khoa, ngành, SĐT (không bắt buộc — để trống hiển thị `--`); khóa suy ra từ mã lớp; tìm kiếm/lọc theo khoa, ngành; tạo/sửa/xóa; bật/tắt nhận thông báo; FCM token chỉ hiện rút gọn trong chi tiết |
-| `/topics`        | 20 topic (15 khoa + 5 khóa), số người đăng ký, sửa metadata, bật/tắt, thêm/xóa topic                                                                                                                                                                          |
-| `/notifications` | Soạn thông báo (lấy nội dung từ sự kiện hoặc tự soạn), xem trước FCM condition, gửi qua BE, lịch sử gửi với trạng thái sent/delivered/failed, gửi lại khi lỗi                                                                                                 |
-| `/settings`      | Đổi API Base URL lúc chạy (lưu localStorage), kiểm tra kết nối BE (`GET /health`), theme Sáng/Tối                                                                                                                                                             |
+| Trang            | Nội dung                                                                                                                                                                                                                                                                                                   |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/` Tổng quan    | Tổng sinh viên, tổng sự kiện, slot đã đăng ký, thông báo đã gửi, tỉ lệ gửi thành công, biểu đồ 7 ngày, sự kiện mới nhất                                                                                                                                                                                    |
+| `/login`         | Đăng nhập bằng email + mật khẩu (ghi nhớ đăng nhập, hiện/ẩn mật khẩu, quên mật khẩu → liên hệ quản trị viên); chưa đăng nhập thì mọi trang đều chuyển về đây; tài khoản demo khi BE không kết nối được                                                                                                     |
+| `/events`        | Danh sách sự kiện cào về + tìm kiếm/lọc theo ngành, khóa, trạng thái; drawer chi tiết kèm danh sách đăng ký (tên, MSSV, giờ đăng ký, SUCCESS/FAILED); tạo/xóa — không có sửa vì BE không có API sửa sự kiện                                                                                                |
+| `/users`         | Sinh viên — khớp đúng collection users của BE: MSSV (khóa chính), họ tên, giới tính, email, Zalo UID, ngành, khóa (21 = K21); tìm kiếm/lọc theo ngành, khóa; tạo/sửa/xóa (sửa không đổi được MSSV và giới tính vì PUT của BE không nhận 2 trường này); mật khẩu sinh viên không bao giờ hiện lên dashboard |
+| `/topics`        | 20 topic (15 khoa + 5 khóa), số người đăng ký, sửa metadata, bật/tắt, thêm/xóa topic                                                                                                                                                                                                                       |
+| `/notifications` | Soạn thông báo (lấy nội dung từ sự kiện hoặc tự soạn), xem trước FCM condition, gửi qua BE, lịch sử gửi với trạng thái sent/delivered/failed, gửi lại khi lỗi                                                                                                                                              |
+| `/settings`      | Đổi API Base URL lúc chạy (lưu localStorage), kiểm tra kết nối BE (`GET /health`), theme Sáng/Tối                                                                                                                                                                                                          |
 
 **Realtime:** kênh chính là SSE `GET /events/stream` (EventSource); nếu BE chưa có
 hoặc mất kết nối thì tự fallback sang polling mỗi 5 giây, tạm dừng khi tab ẩn.
@@ -78,8 +78,8 @@ màu chuyên nghiệp: nền slate, điểm nhấn indigo solid `#1E40AF`, khôn
   cắm BE thật, tạo Firebase project cho BE.
 - `docs/usage.md` — hướng dẫn sử dụng từng trang, đăng nhập (kể cả demo),
   realtime + demo mode, đổi theme/API URL.
-- `docs/api.md` — hợp đồng API BE mà FE đang gọi (auth, events, clients,
-  topics, notifications, realtime).
+- `docs/api.md` — hợp đồng API BE Go mà FE đang gọi (users, events,
+  registrations, topics, notifications, auth, realtime) + bảng BE chưa có gì.
 - `docs/realtime.md` — SSE + polling fallback.
 
 ## Công nghệ
@@ -92,7 +92,7 @@ màu chuyên nghiệp: nền slate, điểm nhấn indigo solid `#1E40AF`, khôn
 
 ```text
 src/
-  app/                 # App Router: /, /login, /events, /clients, /topics, /notifications, /settings
+  app/                 # App Router: /, /login, /events, /users, /topics, /notifications, /settings
   components/          # Sidebar, AuthGuard (route guard + app shell), ui.tsx (Card/Button/Badge/Modal/ConfirmDialog/...)
   hooks/               # useRealtime.ts (SSE + polling fallback)
   lib/
@@ -101,7 +101,7 @@ src/
     faculties.ts       # 15 khoa + 5 khóa (tên khoa hiện là placeholder — xem lưu ý dưới)
     mock.ts            # Dữ liệu mẫu cho Demo Mode
     theme.tsx          # ThemeProvider (light/dark, localStorage)
-  types/               # EventItem, Client, Topic, NotificationLog, ...
+  types/               # EventItem, Student, Registration, Topic, NotificationLog, ...
 docs/
   api.md               # Hợp đồng API BE mà FE đang gọi (kèm ví dụ payload FCM)
   realtime.md          # SSE + polling fallback
@@ -141,9 +141,11 @@ trỏ tới BE production, deploy. Không cần cấu hình gì thêm.
 1. **Tên 15 khoa** trong `src/lib/faculties.ts` hiện là placeholder. Khi có danh
    sách khoa thật của trường, thay ở đó — hoặc tốt hơn: để BE làm nguồn chuẩn
    qua `GET /topics` và chỉ dùng file này làm fallback cho Demo Mode.
-2. **Hợp đồng API:** FE đang gọi theo `docs/api.md`. Nếu BE của anh khác tên
-   endpoint, khác dạng response hoặc chưa có `GET /events/stream`, báo lại để
-   chỉnh `src/lib/api.ts` — chỉ cần sửa 1 file đó.
+2. **Hợp đồng API:** FE đã khớp đúng tài liệu BE Go (users/events/
+   registrations) — xem `docs/api.md`. BE chưa có: `POST /api/auth/login`,
+   `POST /notifications/send`, `GET /topics`, `GET /events/stream` và
+   `PUT /events/{id}` (sửa sự kiện) — các trang liên quan hiện chạy dữ liệu
+   mẫu cho tới khi BE bổ sung.
 3. **Gửi FCM 1 lần hay gửi lặp:** FE mặc định gửi 1 lần với condition OR các
    khóa (Cách A). Trang Thông báo có tùy chọn đổi sang gửi lặp mỗi khóa 1 lần
    (Cách B) — BE cần hỗ trợ `send_mode` tương ứng (xem `docs/api.md`).

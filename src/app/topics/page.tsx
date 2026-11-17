@@ -336,7 +336,7 @@ export default function TopicsPage() {
       {deleting && (
         <ConfirmDialog
           title="Xóa topic?"
-          message={`Topic “${deleting.name}” sẽ bị xóa. Client đang đăng ký topic này sẽ không nhận thông báo qua topic đó nữa.`}
+          message={`Topic “${deleting.name}” sẽ bị xóa. Sinh viên đang đăng ký topic này sẽ không nhận thông báo qua topic đó nữa.`}
           onConfirm={doDelete}
           onCancel={() => setDeleting(null)}
         />

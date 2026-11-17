@@ -8,8 +8,8 @@ import { getAuth, logout, type AuthSession } from "@/lib/auth";
 
 const NAV = [
   { href: "/", label: "Tổng quan", icon: "◈" },
-  { href: "/events", label: "Sự kiện cào", icon: "▤" },
-  { href: "/clients", label: "Người dùng", icon: "👥" },
+  { href: "/events", label: "Sự kiện", icon: "▤" },
+  { href: "/users", label: "Sinh viên", icon: "👥" },
   { href: "/topics", label: "Topic FCM", icon: "📡" },
   { href: "/notifications", label: "Thông báo", icon: "✉" },
   { href: "/settings", label: "Cài đặt", icon: "⚙" },
@@ -94,7 +94,7 @@ export function Sidebar() {
             {theme === "light" ? "🌙 Chuyển theme Tối" : "☀️ Chuyển theme Sáng"}
           </button>
           <p className="mt-4 text-xs leading-relaxed text-indigo-300">
-            FCM: 20 topic — 15 khoa + 5 khóa. Mỗi client đăng ký 1 khoa + 1 khóa.
+            FCM: 20 topic — 15 khoa + 5 khóa. Mỗi sinh viên đăng ký 1 khoa + 1 khóa.
           </p>
         </div>
       </aside>

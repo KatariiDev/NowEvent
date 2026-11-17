@@ -1,7 +1,17 @@
-import type { Client, EventItem, NotificationLog, SendNotificationInput, Topic } from "@/types";
+import type {
+  EventItem,
+  EventStatus,
+  Gender,
+  NotificationLog,
+  Registration,
+  RegistrationStatus,
+  SendNotificationInput,
+  Student,
+  Topic,
+} from "@/types";
 import { ApiError } from "@/types";
 import { buildFcmCondition, cohortLabel, facultyLabel } from "./faculties";
-import { mockClients, mockEvents, mockNotifications, mockTopics } from "./mock";
+import { mockEvents, mockNotifications, mockRegistrations, mockTopics, mockUsers } from "./mock";
 
 export const DEFAULT_API_BASE_URL = "http://localhost:8080/api";
 const STORAGE_KEY = "nowevent.apiBaseUrl";
@@ -52,54 +62,178 @@ const uid = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
 /* ------------------------------------------------------------------ */
-/* Events                                                              */
+/* Mapping snake_case (BE Go) ↔ camelCase (UI). Mọi chuyển đổi nằm ở   */
+/* đây — component chỉ làm việc với dạng camelCase.                    */
 /* ------------------------------------------------------------------ */
 
+interface StudentApi {
+  student_id: number | string;
+  student_name: string;
+  gender: Gender;
+  email: string;
+  zalo_uid: string;
+  major: string;
+  batch: number;
+}
+
+interface EventApi {
+  _id?: string;
+  id?: string;
+  title: string;
+  content: string;
+  major: string;
+  batch: number;
+  event_time_start: string;
+  current_slot: number;
+  max_slot: number;
+  status: EventStatus;
+}
+
+interface RegistrationApi {
+  student_id: number | string;
+  event_id: string;
+  registered_at: string;
+  status: RegistrationStatus;
+}
+
+function toStudent(raw: StudentApi): Student {
+  return {
+    studentId: Number(raw.student_id),
+    studentName: raw.student_name,
+    gender: raw.gender,
+    email: raw.email,
+    zaloUid: raw.zalo_uid,
+    major: raw.major,
+    batch: raw.batch,
+  };
+}
+
+function toEvent(raw: EventApi): EventItem {
+  return {
+    id: raw._id ?? raw.id ?? "",
+    title: raw.title,
+    content: raw.content,
+    major: raw.major,
+    batch: raw.batch,
+    eventTimeStart: raw.event_time_start,
+    currentSlot: raw.current_slot,
+    maxSlot: raw.max_slot,
+    status: raw.status,
+  };
+}
+
+function toRegistration(raw: RegistrationApi): Registration {
+  return {
+    studentId: Number(raw.student_id),
+    eventId: raw.event_id,
+    registeredAt: raw.registered_at,
+    status: raw.status,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Users (sinh viên) — khớp đúng tài liệu BE Go.                       */
+/* POST nhận đủ 7 trường; PUT không có student_id và gender.           */
+/* ------------------------------------------------------------------ */
+
+export async function fetchUsers(): Promise<Student[]> {
+  const raw = await apiFetch<ListResponse<StudentApi> | StudentApi[]>("/users");
+  return unwrapList(raw).map(toStudent);
+}
+
+export async function createUser(input: Student): Promise<Student> {
+  const raw = await apiFetch<StudentApi>("/users", {
+    method: "POST",
+    body: JSON.stringify({
+      student_id: input.studentId,
+      student_name: input.studentName,
+      gender: input.gender,
+      email: input.email,
+      zalo_uid: input.zaloUid,
+      major: input.major,
+      batch: input.batch,
+    }),
+  });
+  return toStudent(raw);
+}
+
+/** Body PUT của BE không có student_id và gender — 2 trường này không sửa được. */
+export interface StudentUpdateInput {
+  studentName: string;
+  email: string;
+  zaloUid: string;
+  major: string;
+  batch: number;
+}
+
+export async function updateUser(studentId: number, input: StudentUpdateInput): Promise<Student> {
+  const raw = await apiFetch<StudentApi>(`/users/${studentId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      student_name: input.studentName,
+      email: input.email,
+      zalo_uid: input.zaloUid,
+      major: input.major,
+      batch: input.batch,
+    }),
+  });
+  return toStudent(raw);
+}
+
+export async function deleteUser(studentId: number): Promise<void> {
+  await apiFetch(`/users/${studentId}`, { method: "DELETE" });
+}
+
+/* ------------------------------------------------------------------ */
+/* Events — khớp đúng tài liệu BE Go. BE không có PUT/PATCH cho event. */
+/* ------------------------------------------------------------------ */
+
+export interface EventCreateInput {
+  title: string;
+  content: string;
+  major: string;
+  batch: number;
+  eventTimeStart: string;
+  maxSlot: number;
+  currentSlot: number;
+  status: EventStatus;
+}
+
 export async function fetchEvents(): Promise<EventItem[]> {
-  return unwrapList(await apiFetch<ListResponse<EventItem> | EventItem[]>("/events?limit=100"));
+  const raw = await apiFetch<ListResponse<EventApi> | EventApi[]>("/events");
+  return unwrapList(raw).map(toEvent);
 }
 
-export async function createEvent(
-  input: Omit<EventItem, "id" | "createdAt" | "scrapedAt"> & { scrapedAt?: string },
-): Promise<EventItem> {
-  return apiFetch<EventItem>("/events", { method: "POST", body: JSON.stringify(input) });
-}
-
-export async function updateEvent(id: string, input: Partial<EventItem>): Promise<EventItem> {
-  return apiFetch<EventItem>(`/events/${id}`, { method: "PUT", body: JSON.stringify(input) });
+export async function createEvent(input: EventCreateInput): Promise<EventItem> {
+  const raw = await apiFetch<EventApi>("/events", {
+    method: "POST",
+    body: JSON.stringify({
+      title: input.title,
+      content: input.content,
+      major: input.major,
+      batch: input.batch,
+      event_time_start: input.eventTimeStart,
+      max_slot: input.maxSlot,
+      current_slot: input.currentSlot,
+      status: input.status,
+    }),
+  });
+  return toEvent(raw);
 }
 
 export async function deleteEvent(id: string): Promise<void> {
   await apiFetch(`/events/${id}`, { method: "DELETE" });
 }
 
-export async function markEvent(id: string, status: "notified" | "ignored"): Promise<EventItem> {
-  return apiFetch<EventItem>(`/events/${id}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
-}
-
 /* ------------------------------------------------------------------ */
-/* Clients                                                             */
+/* Registrations — danh sách đăng ký theo sự kiện.                     */
 /* ------------------------------------------------------------------ */
 
-export async function fetchClients(): Promise<Client[]> {
-  return unwrapList(await apiFetch<ListResponse<Client> | Client[]>("/clients?limit=100"));
-}
-
-export async function createClient(
-  input: Omit<Client, "id" | "createdAt" | "lastActiveAt">,
-): Promise<Client> {
-  return apiFetch<Client>("/clients", { method: "POST", body: JSON.stringify(input) });
-}
-
-export async function updateClient(id: string, input: Partial<Client>): Promise<Client> {
-  return apiFetch<Client>(`/clients/${id}`, { method: "PUT", body: JSON.stringify(input) });
-}
-
-export async function deleteClient(id: string): Promise<void> {
-  await apiFetch(`/clients/${id}`, { method: "DELETE" });
+export async function fetchRegistrationsByEvent(eventId: string): Promise<Registration[]> {
+  const raw = await apiFetch<ListResponse<RegistrationApi> | RegistrationApi[]>(
+    `/registrations/event/${eventId}`,
+  );
+  return unwrapList(raw).map(toRegistration);
 }
 
 /* ------------------------------------------------------------------ */
@@ -165,47 +299,42 @@ export async function testConnection(
 
 export const demoStore = {
   events: [...mockEvents],
-  clients: [...mockClients],
+  users: [...mockUsers],
+  registrations: [...mockRegistrations],
   topics: [...mockTopics],
   notifications: [...mockNotifications],
 };
 
-export function demoCreateEvent(
-  input: Omit<EventItem, "id" | "createdAt" | "scrapedAt">,
-): EventItem {
-  const now = new Date().toISOString();
-  const item: EventItem = { ...input, id: uid("ev"), createdAt: now, scrapedAt: now };
-  demoStore.events.unshift(item);
-  return item;
+/** Demo id dạng ObjectId 24 ký tự hex (giống _id MongoDB của BE). */
+function demoObjectId(): string {
+  return Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
 }
 
-export function demoUpdateEvent(id: string, input: Partial<EventItem>): EventItem {
-  const i = demoStore.events.findIndex((e) => e.id === id);
-  if (i < 0) throw new Error("Không tìm thấy sự kiện");
-  demoStore.events[i] = { ...demoStore.events[i], ...input };
-  return demoStore.events[i];
+export function demoCreateEvent(input: EventCreateInput): EventItem {
+  const item: EventItem = { ...input, id: demoObjectId() };
+  demoStore.events.unshift(item);
+  return item;
 }
 
 export function demoDeleteEvent(id: string): void {
   demoStore.events = demoStore.events.filter((e) => e.id !== id);
 }
 
-export function demoCreateClient(input: Omit<Client, "id" | "createdAt" | "lastActiveAt">): Client {
-  const now = new Date().toISOString();
-  const item: Client = { ...input, id: uid("cl"), createdAt: now, lastActiveAt: now };
-  demoStore.clients.unshift(item);
-  return item;
+export function demoCreateUser(input: Student): Student {
+  demoStore.users.unshift({ ...input });
+  return input;
 }
 
-export function demoUpdateClient(id: string, input: Partial<Client>): Client {
-  const i = demoStore.clients.findIndex((c) => c.id === id);
-  if (i < 0) throw new Error("Không tìm thấy client");
-  demoStore.clients[i] = { ...demoStore.clients[i], ...input };
-  return demoStore.clients[i];
+export function demoUpdateUser(studentId: number, input: StudentUpdateInput): Student {
+  const i = demoStore.users.findIndex((u) => u.studentId === studentId);
+  if (i < 0) throw new Error("Không tìm thấy sinh viên");
+  const kept = demoStore.users[i];
+  demoStore.users[i] = { ...kept, ...input };
+  return demoStore.users[i];
 }
 
-export function demoDeleteClient(id: string): void {
-  demoStore.clients = demoStore.clients.filter((c) => c.id !== id);
+export function demoDeleteUser(studentId: number): void {
+  demoStore.users = demoStore.users.filter((u) => u.studentId !== studentId);
 }
 
 export function demoUpdateTopic(id: string, input: Partial<Topic>): Topic {
@@ -216,6 +345,9 @@ export function demoUpdateTopic(id: string, input: Partial<Topic>): Topic {
 }
 
 export function demoSendNotification(input: SendNotificationInput): NotificationLog {
+  const batches = input.cohorts
+    .map((c) => Number(c.replace(/^k/i, "")))
+    .filter((n) => Number.isFinite(n));
   const item: NotificationLog = {
     id: uid("nt"),
     eventId: input.eventId ?? null,
@@ -225,17 +357,10 @@ export function demoSendNotification(input: SendNotificationInput): Notification
     targetDescription: `${facultyLabel(input.faculty)} — ${input.cohorts.map(cohortLabel).join(", ")}`,
     status: "delivered",
     sentAt: new Date().toISOString(),
-    successCount: demoStore.clients.filter(
-      (c) => c.enabled && c.faculty === input.faculty && input.cohorts.includes(c.cohort),
-    ).length,
+    successCount: demoStore.users.filter((u) => batches.includes(u.batch)).length,
     failureCount: 0,
   };
   demoStore.notifications.unshift(item);
-  if (input.eventId) {
-    demoStore.events = demoStore.events.map((e) =>
-      e.id === input.eventId ? { ...e, status: "notified", notifiedAt: item.sentAt } : e,
-    );
-  }
   return item;
 }
 

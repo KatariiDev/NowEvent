@@ -1,49 +1,57 @@
-export type EventStatus = "new" | "notified" | "ignored";
+/** Trạng thái sự kiện theo BE Go: chỉ 2 giá trị. */
+export type EventStatus = "Open" | "Closed";
 
 export interface EventItem {
+  /** MongoDB _id của sự kiện (BE trả `_id`, FE map sang `id`). */
   id: string;
   title: string;
   content: string;
-  sourceUrl: string;
-  /** Faculty slug, e.g. "cntt" (see src/lib/faculties.ts). */
-  faculty: string;
-  /** Cohort slugs, e.g. ["k21", "k22"]. */
-  cohorts: string[];
-  type: string;
+  /** Ngành, text tự do, VD "Công nghệ thông tin". */
+  major: string;
+  /** Khóa dạng số, VD 21 = K21. */
+  batch: number;
+  /** Giờ bắt đầu sự kiện, ISO 8601 (BE: `event_time_start`). */
+  eventTimeStart: string;
+  /** Số slot đã đăng ký (BE: `current_slot`). */
+  currentSlot: number;
+  /** Số slot tối đa (BE: `max_slot`). */
+  maxSlot: number;
   status: EventStatus;
-  scrapedAt: string;
-  notifiedAt?: string | null;
-  createdAt: string;
 }
 
+export type Gender = "male" | "female" | "other";
+
 /**
- * Client = User — chỉ 1 thực thể duy nhất (anh đính chính 16/11).
- * 1 người dùng gồm 5 trường thông tin: họ tên, mã lớp, khoa, ngành, SĐT;
- * cộng các trường FCM để gửi thông báo (fcmToken, topics, enabled).
- * cohort là trường nội bộ cho topic FCM, suy ra từ mã lớp (VD "CNTT-K21A"
- * → "k21"), không hiển thị cột riêng trong bảng.
+ * Sinh viên — thực thể người dùng duy nhất của dashboard, khớp đúng
+ * collection `users` của BE Go. Khóa chính là `studentId` (MSSV, số).
+ * BE còn lưu `_id` và `Student_web_password` nhưng FE không bao giờ
+ * lấy, lưu hay hiển thị mật khẩu.
  */
-export interface Client {
-  id: string;
-  /** Họ và tên. */
-  fullName: string;
-  /** Mã lớp, VD "CNTT-K21A". Khóa suy ra từ mã lớp, VD chứa K21 → k21. */
-  classCode: string;
-  /** Faculty slug, e.g. "cntt" (see src/lib/faculties.ts). */
-  faculty: string;
-  /** Ngành, free text, VD "Công nghệ thông tin". */
+export interface Student {
+  /** MSSV, VD 21084201. */
+  studentId: number;
+  studentName: string;
+  gender: Gender;
+  email: string;
+  /** Zalo UID, VD "zalo_123456". */
+  zaloUid: string;
+  /** Ngành, VD "Công nghệ thông tin". */
   major: string;
-  /** Số điện thoại — optional, null khi không có. Hiển thị "--" khi trống. */
-  phone?: string | null;
-  /** Khóa suy ra từ mã lớp, VD "k21". Dùng để tính topic FCM. */
-  cohort: string;
-  /** FCM registration token (device token). Never log this value. */
-  fcmToken: string;
-  /** Subscribed topics, e.g. ["faculty_cntt", "cohort_k21"]. */
-  topics: string[];
-  enabled: boolean;
-  lastActiveAt: string;
-  createdAt: string;
+  /** Khóa dạng số, VD 21 = K21. */
+  batch: number;
+}
+
+export type RegistrationStatus = "SUCCESS" | "FAILED";
+
+/** 1 lượt đăng ký của 1 sinh viên vào 1 sự kiện (collection `registrations`). */
+export interface Registration {
+  /** MSSV của sinh viên đăng ký. */
+  studentId: number;
+  /** MongoDB _id của sự kiện. */
+  eventId: string;
+  /** Giờ đăng ký, ISO 8601. */
+  registeredAt: string;
+  status: RegistrationStatus;
 }
 
 export type TopicKind = "faculty" | "cohort";

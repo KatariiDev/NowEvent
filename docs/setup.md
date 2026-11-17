@@ -42,7 +42,7 @@ npm run format  # Prettier toàn bộ src/
    `https://be-truong.example/api`), hoặc đổi ở trang Cài đặt sau khi đăng
    nhập.
 2. BE cần implement đúng hợp đồng trong `docs/api.md`: `GET /health`,
-   CRUD `/events`, `/clients`, `/topics`, `/notifications`,
+   CRUD `/events`, `/users`, `/topics`, `/notifications`,
    `POST /api/auth/login`, và (khuyên có) SSE `GET /events/stream`.
 3. Thiếu `GET /events/stream` thì dashboard vẫn chạy nhờ polling 5 giây.
 4. Kiểm tra kết nối ở trang Cài đặt (bấm kiểm tra → báo latency nếu OK).
@@ -56,7 +56,7 @@ npm run format  # Prettier toàn bộ src/
 2. Project Settings → Service accounts → tạo key JSON cho BE.
 3. BE dùng Firebase Admin SDK với key đó để gửi FCM qua
    `POST /api/notifications/send` (FE chỉ kích hoạt gửi, không giữ key).
-4. Client (app sinh viên) đăng ký 2 topic: 1 khoa + 1 khóa của mình.
+4. Sinh viên đăng ký 2 topic: 1 khoa + 1 khóa của mình.
 
 ## Deploy Vercel
 
