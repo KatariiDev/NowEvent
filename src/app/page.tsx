@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { demoStore, fetchEvents, fetchNotifications, fetchTopics, fetchUsers } from "@/lib/api";
 import { useRealtime } from "@/hooks/useRealtime";
-import { Badge, Card, DemoBanner, ErrorBox, LiveBadge, StatCard } from "@/components/ui";
+import { Badge, Card, DemoBanner, ErrorBox, StatCard } from "@/components/ui";
 import type { EventItem, NotificationLog, Student, Topic } from "@/types";
 
 function formatTime(iso: string): string {
@@ -56,7 +56,7 @@ export default function DashboardPage() {
     load();
   }, [load]);
 
-  const { status, lastUpdate, refresh } = useRealtime({ onPoll: load, demo });
+  const { lastUpdate, refresh } = useRealtime({ onPoll: load, demo });
 
   const sent = notifications.filter((n) => n.status === "sent" || n.status === "delivered");
   const totalSuccess = notifications.reduce((s, n) => s + (n.successCount ?? 0), 0);
@@ -66,8 +66,6 @@ export default function DashboardPage() {
       ? Math.round((totalSuccess / (totalSuccess + totalFail)) * 100)
       : 100;
   const openEvents = events.filter((e) => e.status === "Open").length;
-  const totalSlots = events.reduce((s, e) => s + e.maxSlot, 0);
-  const filledSlots = events.reduce((s, e) => s + e.currentSlot, 0);
 
   // Simple 7-day bar chart: events starting per day (solid bars, no chart lib).
   const days: { label: string; count: number }[] = [];
@@ -84,18 +82,17 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Tổng quan</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">Tổng quan</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Sự kiện cào từ web Đoàn trường, sinh viên đăng ký và thông báo FCM.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <LiveBadge status={status} />
           <button
             onClick={refresh}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
             ↻ Làm mới
           </button>
@@ -112,7 +109,7 @@ export default function DashboardPage() {
       )}
       {loading && <p className="mb-4 text-sm text-slate-500">Đang tải dữ liệu…</p>}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard
           label="Tổng sinh viên"
           value={users.length}
@@ -124,12 +121,6 @@ export default function DashboardPage() {
           value={events.length}
           sub={`${openEvents} sự kiện đang mở`}
           tone="indigo"
-        />
-        <StatCard
-          label="Slot đã đăng ký"
-          value={`${filledSlots}/${totalSlots}`}
-          sub="Tổng lượt đăng ký trên mọi sự kiện"
-          tone="green"
         />
         <StatCard
           label="Thông báo đã gửi"
@@ -145,7 +136,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-6 sm:gap-4 lg:grid-cols-2">
         <Card className="p-5">
           <h2 className="mb-1 text-base font-semibold text-slate-900 dark:text-white">
             Sự kiện bắt đầu — 7 ngày qua
@@ -160,7 +151,7 @@ export default function DashboardPage() {
                   {d.count}
                 </span>
                 <div
-                  className="w-full rounded-t bg-indigo-700"
+                  className="w-full rounded-t-sm bg-indigo-700"
                   style={{ height: `${Math.max(4, (d.count / maxDay) * 90)}px` }}
                 />
                 <span className="text-[11px] text-slate-500 dark:text-slate-400">{d.label}</span>
@@ -197,9 +188,11 @@ export default function DashboardPage() {
                         {e.currentSlot}/{e.maxSlot}
                       </p>
                     </div>
-                    <Badge tone={e.status === "Open" ? "green" : "slate"}>
-                      {e.status === "Open" ? "Đang mở" : "Đã đóng"}
-                    </Badge>
+                    <div className="shrink-0">
+                      <Badge tone={e.status === "Open" ? "green" : "slate"}>
+                        {e.status === "Open" ? "Đang mở" : "Đã đóng"}
+                      </Badge>
+                    </div>
                   </div>
                 </li>
               ))}

@@ -38,7 +38,7 @@ export function Sidebar() {
         <button
           onClick={() => setOpen(!open)}
           aria-label="Mở menu"
-          className="rounded-lg border border-indigo-600 px-3 py-1 text-sm"
+          className="rounded-md border border-indigo-600 px-3 py-1 text-sm"
         >
           {open ? "Đóng ✕" : "Menu ☰"}
         </button>
@@ -61,7 +61,7 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
                   active
                     ? "bg-indigo-700 text-white"
                     : "text-indigo-200 hover:bg-indigo-800 hover:text-white"
@@ -75,13 +75,13 @@ export function Sidebar() {
         </nav>
         <div className="px-5 py-6">
           {session && (
-            <div className="mb-4 rounded-lg bg-indigo-800 px-3 py-2">
+            <div className="mb-4 rounded-md bg-indigo-800 px-3 py-2">
               <p className="truncate text-sm font-medium text-white">{session.user.name}</p>
               <p className="truncate text-xs text-indigo-300">{session.user.email}</p>
               {session.demo && <p className="mt-1 text-xs font-medium text-amber-300">DEMO MODE</p>}
               <button
                 onClick={doLogout}
-                className="mt-2 w-full rounded-lg border border-indigo-600 px-3 py-1.5 text-sm font-medium text-indigo-100 hover:bg-indigo-700"
+                className="mt-2 w-full rounded-md border border-indigo-600 px-3 py-1.5 text-sm font-medium text-indigo-100 hover:bg-indigo-700"
               >
                 Đăng xuất
               </button>
@@ -89,7 +89,7 @@ export function Sidebar() {
           )}
           <button
             onClick={toggleTheme}
-            className="w-full rounded-lg border border-indigo-600 px-3 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-800"
+            className="w-full rounded-md border border-indigo-600 px-3 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-800"
           >
             {theme === "light" ? "🌙 Chuyển theme Tối" : "☀️ Chuyển theme Sáng"}
           </button>

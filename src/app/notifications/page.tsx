@@ -164,12 +164,12 @@ export default function NotificationsPage() {
           </h2>
           <div className="space-y-4">
             {sendError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-200">
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-200">
                 {sendError}
               </p>
             )}
             {sendOk && (
-              <p className="break-all rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+              <p className="break-all rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
                 {sendOk}
               </p>
             )}
@@ -224,7 +224,7 @@ export default function NotificationsPage() {
                     key={c.slug}
                     type="button"
                     onClick={() => toggleCohort(c.slug)}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium ${cohorts.includes(c.slug) ? "bg-indigo-700 text-white" : "border border-slate-300 text-slate-700 dark:border-slate-600 dark:text-slate-200"}`}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium ${cohorts.includes(c.slug) ? "bg-indigo-700 text-white" : "border border-slate-300 text-slate-700 dark:border-slate-600 dark:text-slate-200"}`}
                   >
                     {c.label}
                   </button>
@@ -241,7 +241,7 @@ export default function NotificationsPage() {
                 <option value="per-cohort">Gửi lặp — mỗi khóa 1 lần (Cách B)</option>
               </select>
             </Field>
-            <div className="rounded-lg bg-slate-100 p-3 text-xs dark:bg-slate-900">
+            <div className="rounded-md bg-slate-100 p-3 text-xs dark:bg-slate-900">
               <p className="font-medium text-slate-700 dark:text-slate-300">
                 Xem trước FCM condition:
               </p>
