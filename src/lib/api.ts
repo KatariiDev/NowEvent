@@ -148,7 +148,8 @@ export async function fetchUsers(): Promise<Student[]> {
 }
 
 export async function createUser(input: Student): Promise<Student> {
-  const raw = await apiFetch<StudentApi>("/users", {
+  // BE trả {message, data} — phải bóc data ra, map thẳng response sẽ ra NaN.
+  const raw = await apiFetch<{ message: string; data: StudentApi } | StudentApi>("/users", {
     method: "POST",
     body: JSON.stringify({
       // BE model.User.StudentID là string — gửi số là Go decode lỗi -> 400.
@@ -161,7 +162,7 @@ export async function createUser(input: Student): Promise<Student> {
       batch: input.batch,
     }),
   });
-  return toStudent(raw);
+  return toStudent("data" in raw ? raw.data : raw);
 }
 
 /** Body PUT của BE không có student_id và gender — 2 trường này không sửa được. */
@@ -173,8 +174,12 @@ export interface StudentUpdateInput {
   batch: number;
 }
 
-export async function updateUser(studentId: number, input: StudentUpdateInput): Promise<Student> {
-  const raw = await apiFetch<StudentApi>(`/users/${studentId}`, {
+/**
+ * BE PUT /users/{id} chỉ trả {message} — không có dữ liệu user.
+ * Trả về void; trang tự gộp giá trị form vào dòng hiện tại.
+ */
+export async function updateUser(studentId: number, input: StudentUpdateInput): Promise<void> {
+  await apiFetch(`/users/${studentId}`, {
     method: "PUT",
     body: JSON.stringify({
       student_name: input.studentName,
@@ -184,7 +189,6 @@ export async function updateUser(studentId: number, input: StudentUpdateInput): 
       batch: input.batch,
     }),
   });
-  return toStudent(raw);
 }
 
 export async function deleteUser(studentId: number): Promise<void> {
@@ -212,7 +216,8 @@ export async function fetchEvents(): Promise<EventItem[]> {
 }
 
 export async function createEvent(input: EventCreateInput): Promise<EventItem> {
-  const raw = await apiFetch<EventApi>("/events", {
+  // BE trả {message, data} — phải bóc data ra, map thẳng response sẽ ra dòng trống.
+  const raw = await apiFetch<{ message: string; data: EventApi } | EventApi>("/events", {
     method: "POST",
     body: JSON.stringify({
       title: input.title,
@@ -225,7 +230,7 @@ export async function createEvent(input: EventCreateInput): Promise<EventItem> {
       status: input.status,
     }),
   });
-  return toEvent(raw);
+  return toEvent("data" in raw ? raw.data : raw);
 }
 
 export async function deleteEvent(id: string): Promise<void> {

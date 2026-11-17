@@ -163,10 +163,15 @@ export default function UsersPage() {
           major: form.major.trim(),
           batch: Number(form.batch),
         };
-        const updated = demo
-          ? demoUpdateUser(editing.studentId, payload)
-          : await updateUser(editing.studentId, payload);
-        setUsers((prev) => prev.map((u) => (u.studentId === editing.studentId ? updated : u)));
+        if (demo) {
+          const updated = demoUpdateUser(editing.studentId, payload);
+          setUsers((prev) => prev.map((u) => (u.studentId === editing.studentId ? updated : u)));
+        } else {
+          // BE PUT chỉ trả {message} — tự gộp giá trị form vào dòng hiện tại.
+          await updateUser(editing.studentId, payload);
+          const updated: Student = { ...editing, ...payload };
+          setUsers((prev) => prev.map((u) => (u.studentId === editing.studentId ? updated : u)));
+        }
         setEditing(null);
       } else {
         const payload: Student = {
