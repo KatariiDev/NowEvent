@@ -25,6 +25,7 @@ import {
   inputClass,
 } from "@/components/ui";
 import { useRealtime } from "@/hooks/useRealtime";
+import { COHORTS, FACULTIES } from "@/lib/faculties";
 import type { Gender, Student } from "@/types";
 
 const GENDER_LABEL: Record<Gender, string> = {
@@ -49,7 +50,7 @@ const EMPTY_FORM: StudentFormValues = {
   gender: "male",
   email: "",
   zaloUid: "",
-  major: "",
+  major: FACULTIES[0].label,
   batch: "21",
 };
 
@@ -67,6 +68,16 @@ export default function UsersPage() {
   const [form, setForm] = useState<StudentFormValues>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // Dropdown theo topic: khoa = 15 topic faculty, khóa = 5 topic cohort.
+  // Giữ lại giá trị cũ khi sửa nếu dữ liệu cũ gõ tay không nằm trong danh sách.
+  const majorOptions = useMemo(() => {
+    const labels = FACULTIES.map((f) => f.label);
+    return form.major && !labels.includes(form.major) ? [form.major, ...labels] : labels;
+  }, [form.major]);
+  const batchOptions = useMemo(() => {
+    const nums = COHORTS.map((c) => c.slug.slice(1));
+    return form.batch && !nums.includes(form.batch) ? [form.batch, ...nums] : nums;
+  }, [form.batch]);
 
   const load = useCallback(async () => {
     try {
@@ -357,13 +368,17 @@ export default function UsersPage() {
                 />
               </Field>
               <Field label="Khóa *">
-                <input
+                <select
                   value={form.batch}
                   onChange={(e) => setForm({ ...form, batch: e.target.value })}
                   className={inputClass}
-                  placeholder="VD: 21 = K21"
-                  inputMode="numeric"
-                />
+                >
+                  {batchOptions.map((n) => (
+                    <option key={n} value={n}>
+                      Khóa K{n}
+                    </option>
+                  ))}
+                </select>
               </Field>
             </div>
             <Field label="Họ và tên *">
@@ -388,12 +403,17 @@ export default function UsersPage() {
                 </select>
               </Field>
               <Field label="Ngành *">
-                <input
+                <select
                   value={form.major}
                   onChange={(e) => setForm({ ...form, major: e.target.value })}
                   className={inputClass}
-                  placeholder="VD: Công nghệ thông tin"
-                />
+                >
+                  {majorOptions.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
               </Field>
             </div>
             <Field label="Email *">

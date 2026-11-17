@@ -13,6 +13,7 @@ import {
   type EventCreateInput,
 } from "@/lib/api";
 import { useRealtime } from "@/hooks/useRealtime";
+import { COHORTS, FACULTIES } from "@/lib/faculties";
 import {
   Badge,
   Button,
@@ -50,7 +51,7 @@ interface EventFormValues {
 const EMPTY_FORM: EventFormValues = {
   title: "",
   content: "",
-  major: "",
+  major: FACULTIES[0].label,
   batch: "21",
   eventTimeStart: "",
   maxSlot: "300",
@@ -90,6 +91,16 @@ export default function EventsPage() {
   const [form, setForm] = useState<EventFormValues>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // Dropdown theo topic: khoa = 15 topic faculty, khóa = 5 topic cohort.
+  // Giữ lại giá trị cũ khi sửa nếu dữ liệu cũ gõ tay không nằm trong danh sách.
+  const majorOptions = useMemo(() => {
+    const labels = FACULTIES.map((f) => f.label);
+    return form.major && !labels.includes(form.major) ? [form.major, ...labels] : labels;
+  }, [form.major]);
+  const batchOptions = useMemo(() => {
+    const nums = COHORTS.map((c) => c.slug.slice(1));
+    return form.batch && !nums.includes(form.batch) ? [form.batch, ...nums] : nums;
+  }, [form.batch]);
 
   const load = useCallback(async () => {
     try {
@@ -469,21 +480,30 @@ export default function EventsPage() {
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Ngành *">
-                <input
+                <select
                   value={form.major}
                   onChange={(e) => setForm({ ...form, major: e.target.value })}
                   className={inputClass}
-                  placeholder="VD: Công nghệ thông tin"
-                />
+                >
+                  {majorOptions.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
               </Field>
               <Field label="Khóa *">
-                <input
+                <select
                   value={form.batch}
                   onChange={(e) => setForm({ ...form, batch: e.target.value })}
                   className={inputClass}
-                  placeholder="VD: 21 = K21"
-                  inputMode="numeric"
-                />
+                >
+                  {batchOptions.map((n) => (
+                    <option key={n} value={n}>
+                      Khóa K{n}
+                    </option>
+                  ))}
+                </select>
               </Field>
             </div>
             <Field label="Thời gian bắt đầu *">
