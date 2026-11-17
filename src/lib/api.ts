@@ -293,9 +293,22 @@ export async function testConnection(
 ): Promise<{ ok: boolean; latencyMs: number }> {
   const base = (baseUrl ?? getApiBaseUrl()).replace(/\/$/, "");
   const started = Date.now();
-  const res = await fetch(`${base}/health`, { signal: AbortSignal.timeout(5000) });
-  if (!res.ok) throw new ApiError(res.status, `BE trả lỗi ${res.status}`);
-  return { ok: true, latencyMs: Date.now() - started };
+  // BE chưa chắc có /health — thử lần lượt các endpoint có thật.
+  // Endpoint nào trả 2xx cũng chứng tỏ BE đang chạy.
+  const candidates = ["/health", "/events", "/users"];
+  let lastError: ApiError | null = null;
+  for (const path of candidates) {
+    try {
+      const res = await fetch(`${base}${path}`, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) return { ok: true, latencyMs: Date.now() - started };
+      lastError = new ApiError(res.status, `BE trả lỗi ${res.status}`);
+    } catch (err) {
+      lastError = err instanceof ApiError ? err : new ApiError(0, "Không kết nối được tới BE");
+      // Lỗi mạng/CORS thì các endpoint còn lại cũng lỗi tương tự — dừng sớm.
+      break;
+    }
+  }
+  throw lastError ?? new ApiError(0, "Không kết nối được tới BE");
 }
 
 /* ------------------------------------------------------------------ */

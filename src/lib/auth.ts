@@ -57,6 +57,32 @@ interface LoginResponse {
 }
 
 /**
+ * Đăng nhập demo khi BE không kết nối được hoặc chưa có endpoint đăng nhập.
+ * Chỉ tài khoản demo mới vào được; tài khoản khác báo rõ lý do.
+ */
+function loginDemoOrThrow(
+  email: string,
+  password: string,
+  remember: boolean,
+  noAuthEndpoint = false,
+): AuthSession {
+  if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    const demo: AuthSession = {
+      token: "demo-token",
+      user: { name: "Quản trị viên (Demo)", email: DEMO_EMAIL, role: "admin" },
+      demo: true,
+    };
+    saveAuth(demo, remember);
+    return demo;
+  }
+  throw new Error(
+    noAuthEndpoint
+      ? "BE chưa có chức năng đăng nhập (endpoint /auth/login chưa tồn tại). Chỉ đăng nhập demo được — dùng tài khoản demo."
+      : "Không kết nối được tới BE. Kiểm tra lại API Base URL ở trang Cài đặt — hoặc đăng nhập demo bằng tài khoản demo.",
+  );
+}
+
+/**
  * Đăng nhập qua BE: POST {API}/auth/login (đầy đủ là /api/auth/login).
  * - BE trả 200 + {token, user} → lưu session, trả về session.
  * - BE trả 401 → sai email hoặc mật khẩu.
@@ -76,23 +102,16 @@ export async function login(
       body: JSON.stringify({ email, password }),
     });
   } catch {
-    // BE không kết nối được — chỉ cho đăng nhập demo.
-    if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      const demo: AuthSession = {
-        token: "demo-token",
-        user: { name: "Quản trị viên (Demo)", email: DEMO_EMAIL, role: "admin" },
-        demo: true,
-      };
-      saveAuth(demo, remember);
-      return demo;
-    }
-    throw new Error(
-      "Không kết nối được tới BE. Kiểm tra lại API Base URL ở trang Cài đặt — hoặc đăng nhập demo bằng tài khoản demo.",
-    );
+    return loginDemoOrThrow(email, password, remember);
   }
 
   if (res.status === 401) {
     throw new Error("Sai email hoặc mật khẩu. Vui lòng thử lại.");
+  }
+  if (res.status === 404 || res.status === 405 || res.status === 501) {
+    // BE chưa có endpoint đăng nhập (trả 404) — coi như chưa kết nối được
+    // phần auth: tài khoản demo vẫn vào được, tài khoản khác báo rõ lý do.
+    return loginDemoOrThrow(email, password, remember, true);
   }
   if (!res.ok) {
     let message = `BE trả lỗi ${res.status}`;
