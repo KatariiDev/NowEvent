@@ -54,8 +54,14 @@ interface ListResponse<T> {
   total?: number;
 }
 
-function unwrapList<T>(res: ListResponse<T> | T[]): T[] {
-  return Array.isArray(res) ? res : res.data;
+function unwrapList<T>(res: ListResponse<T> | T[] | null | undefined): T[] {
+  // BE Go encode slice rỗng thành `null` — coi như danh sách rỗng.
+  if (res == null) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.data)) return res.data;
+  // VD: catch-all của BE trả {"status":"success",...} thay cho danh sách —
+  // đó không phải dữ liệu thật, báo lỗi để trang rơi về Demo Mode thay vì vỡ.
+  throw new ApiError(0, "BE trả về dữ liệu không đúng dạng danh sách");
 }
 
 const uid = (prefix: string) =>
