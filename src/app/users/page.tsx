@@ -230,7 +230,7 @@ export default function UsersPage() {
           <LiveBadge status={status} />
           <button
             onClick={refresh}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
             ↻ Làm mới
           </button>
@@ -345,12 +345,12 @@ export default function UsersPage() {
         >
           <div className="space-y-4">
             {formError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-200">
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-200">
                 {formError}
               </p>
             )}
             {editing && (
-              <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+              <p className="rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
                 MSSV <strong className="font-mono">{editing.studentId}</strong> và giới tính{" "}
                 <strong>{GENDER_LABEL[editing.gender]}</strong> không sửa được — API PUT của BE
                 không nhận 2 trường này.

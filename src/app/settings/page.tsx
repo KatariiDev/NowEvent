@@ -71,13 +71,13 @@ export default function SettingsPage() {
             </p>
             {testResult && (
               <p
-                className={`rounded-lg px-3 py-2 text-sm ${testResult.startsWith("Kết nối OK") ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" : "bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-200"}`}
+                className={`rounded-md px-3 py-2 text-sm ${testResult.startsWith("Kết nối OK") ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" : "bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-200"}`}
               >
                 {testResult}
               </p>
             )}
             {saved && (
-              <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+              <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
                 Đã lưu. Tải lại các trang để dùng URL mới.
               </p>
             )}

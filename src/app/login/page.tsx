@@ -69,11 +69,11 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h1 className="mb-5 text-xl font-semibold text-slate-900 dark:text-white">Đăng nhập</h1>
 
           {demoAvailable === true && (
-            <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+            <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
               <strong>DEMO MODE — BE không kết nối được.</strong> Bạn có thể đăng nhập demo bằng tài
               khoản dưới đây; chỉ xem dữ liệu mẫu, không lưu lên server.
               <br />
@@ -93,7 +93,7 @@ export default function LoginPage() {
 
           <form onSubmit={submit} className="space-y-4">
             {error && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-200">
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-200">
                 {error}
               </p>
             )}
@@ -150,7 +150,7 @@ export default function LoginPage() {
               </button>
             </div>
             {forgotMsg && (
-              <p className="rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+              <p className="rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
                 Chức năng đặt lại mật khẩu chưa được triển khai. Vui lòng liên hệ quản trị viên để
                 được cấp lại mật khẩu.
               </p>
@@ -164,7 +164,7 @@ export default function LoginPage() {
         <div className="mt-4 text-center">
           <button
             onClick={toggleTheme}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
             {theme === "light" ? "🌙 Chuyển theme Tối" : "☀️ Chuyển theme Sáng"}
           </button>

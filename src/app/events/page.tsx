@@ -255,7 +255,7 @@ export default function EventsPage() {
           <LiveBadge status={status} />
           <button
             onClick={refresh}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
           >
             ↻ Làm mới
           </button>
@@ -384,7 +384,7 @@ export default function EventsPage() {
               <button
                 onClick={() => setSelected(null)}
                 aria-label="Đóng"
-                className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                className="rounded-md px-2 py-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 ✕
               </button>
@@ -458,7 +458,7 @@ export default function EventsPage() {
         <Modal title="Thêm sự kiện" onClose={() => setCreating(false)}>
           <div className="space-y-4">
             {formError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-200">
+              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-200">
                 {formError}
               </p>
             )}
