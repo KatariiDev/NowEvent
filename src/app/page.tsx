@@ -27,11 +27,12 @@ export default function DashboardPage() {
 
   const load = useCallback(async () => {
     try {
-      const [ev, us, tp, nt] = await Promise.all([
-        fetchEvents(),
-        fetchUsers(),
-        fetchTopics(),
-        fetchNotifications(),
+      const [ev, us] = await Promise.all([fetchEvents(), fetchUsers()]);
+      // Topic và Thông báo chưa có endpoint trên BE — thiếu thì để rỗng,
+      // không kéo cả trang về Demo Mode chỉ vì 2 mục này.
+      const [tp, nt] = await Promise.all([
+        fetchTopics().catch((): Topic[] => []),
+        fetchNotifications().catch((): NotificationLog[] => []),
       ]);
       setEvents(ev);
       setUsers(us);
