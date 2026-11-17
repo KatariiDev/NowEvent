@@ -11,7 +11,15 @@ import {
   sendNotification,
 } from "@/lib/api";
 import { Badge, Button, Card, DemoBanner, EmptyState, Field, inputClass } from "@/components/ui";
-import { COHORTS, FACULTIES, buildFcmCondition, cohortLabel, facultyLabel } from "@/lib/faculties";
+import {
+  COHORTS,
+  FACULTIES,
+  batchToCohortSlug,
+  buildFcmCondition,
+  cohortLabel,
+  facultyLabel,
+  majorToFacultySlug,
+} from "@/lib/faculties";
 import type { EventItem, NotificationLog, NotificationStatus } from "@/types";
 
 const STATUS_TONE: Record<NotificationStatus, "green" | "amber" | "red" | "slate" | "blue"> = {
@@ -81,8 +89,10 @@ export default function NotificationsPage() {
     if (ev) {
       setTitle(ev.title);
       setBody(ev.content.slice(0, 200));
-      setFaculty(ev.faculty);
-      setCohorts(ev.cohorts);
+      // Sự kiện BE chỉ có major (text) + batch (số) — suy ra slug khoa/khóa
+      // để điền sẵn khung soạn thông báo; BE phải tự tính condition thật.
+      setFaculty(majorToFacultySlug(ev.major));
+      setCohorts([batchToCohortSlug(ev.batch)]);
     }
   };
 

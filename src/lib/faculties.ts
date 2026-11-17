@@ -59,6 +59,22 @@ export function cohortLabel(slug: string): string {
 }
 
 /**
+ * Suy ra slug khoa từ tên ngành của sự kiện (BE chỉ trả `major` dạng text).
+ * Khớp theo label trong danh sách khoa placeholder; không khớp thì dùng
+ * "cntt" để condition preview vẫn tạo được — đây chỉ là gợi ý soạn thông
+ * báo, BE phải tự tính condition thật từ major + batch.
+ */
+export function majorToFacultySlug(major: string): string {
+  const found = FACULTIES.find((f) => f.label.trim().toLowerCase() === major.trim().toLowerCase());
+  return found?.slug ?? "cntt";
+}
+
+/** Khóa dạng số của BE (21) → slug khóa của FE ("k21"). */
+export function batchToCohortSlug(batch: number): string {
+  return `k${batch}`;
+}
+
+/**
  * Build the FCM condition for one faculty + N cohorts.
  * Rule (from the FCM summary): every cohort to receive MUST appear in the
  * condition — writing cohorts only in body/data does NOT select recipients.

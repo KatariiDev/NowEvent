@@ -24,7 +24,7 @@ Kích hoạt khi một trong các điều kiện sau xảy ra:
 1. SSE lỗi lần đầu (`onerror` của EventSource), hoặc
 2. SSE không mở được trong 6 giây đầu.
 
-Khi đó FE gọi lại hàm tải dữ liệu (`GET /events`, `GET /clients`, …) mỗi
+Khi đó FE gọi lại hàm tải dữ liệu (`GET /events`, `GET /users`, …) mỗi
 **5 giây**. Badge hiển thị **LIVE — Polling 5s**.
 
 ## Tạm dừng khi tab ẩn

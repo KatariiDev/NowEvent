@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { demoStore, fetchClients, fetchEvents, fetchNotifications, fetchTopics } from "@/lib/api";
+import { demoStore, fetchEvents, fetchNotifications, fetchTopics, fetchUsers } from "@/lib/api";
 import { useRealtime } from "@/hooks/useRealtime";
 import { Badge, Card, DemoBanner, ErrorBox, LiveBadge, StatCard } from "@/components/ui";
-import { cohortLabel, facultyLabel } from "@/lib/faculties";
-import type { Client, EventItem, NotificationLog, Topic } from "@/types";
+import type { EventItem, NotificationLog, Student, Topic } from "@/types";
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleString("vi-VN", {
@@ -19,7 +18,7 @@ function formatTime(iso: string): string {
 
 export default function DashboardPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+  const [users, setUsers] = useState<Student[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [notifications, setNotifications] = useState<NotificationLog[]>([]);
   const [demo, setDemo] = useState(false);
@@ -28,21 +27,22 @@ export default function DashboardPage() {
 
   const load = useCallback(async () => {
     try {
-      const [ev, cl, tp, nt] = await Promise.all([
-        fetchEvents(),
-        fetchClients(),
-        fetchTopics(),
-        fetchNotifications(),
+      const [ev, us] = await Promise.all([fetchEvents(), fetchUsers()]);
+      // Topic và Thông báo chưa có endpoint trên BE — thiếu thì để rỗng,
+      // không kéo cả trang về Demo Mode chỉ vì 2 mục này.
+      const [tp, nt] = await Promise.all([
+        fetchTopics().catch((): Topic[] => []),
+        fetchNotifications().catch((): NotificationLog[] => []),
       ]);
       setEvents(ev);
-      setClients(cl);
+      setUsers(us);
       setTopics(tp);
       setNotifications(nt);
       setDemo(false);
       setError(null);
     } catch {
       setEvents([...demoStore.events]);
-      setClients([...demoStore.clients]);
+      setUsers([...demoStore.users]);
       setTopics([...demoStore.topics]);
       setNotifications([...demoStore.notifications]);
       setDemo(true);
@@ -65,10 +65,11 @@ export default function DashboardPage() {
     totalSuccess + totalFail > 0
       ? Math.round((totalSuccess / (totalSuccess + totalFail)) * 100)
       : 100;
-  const activeClients = clients.filter((c) => c.enabled).length;
-  const newEvents = events.filter((e) => e.status === "new").length;
+  const openEvents = events.filter((e) => e.status === "Open").length;
+  const totalSlots = events.reduce((s, e) => s + e.maxSlot, 0);
+  const filledSlots = events.reduce((s, e) => s + e.currentSlot, 0);
 
-  // Simple 7-day bar chart: events scraped per day (solid bars, no chart lib).
+  // Simple 7-day bar chart: events starting per day (solid bars, no chart lib).
   const days: { label: string; count: number }[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
@@ -76,7 +77,7 @@ export default function DashboardPage() {
     const key = d.toDateString();
     days.push({
       label: d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
-      count: events.filter((e) => new Date(e.scrapedAt).toDateString() === key).length,
+      count: events.filter((e) => new Date(e.eventTimeStart).toDateString() === key).length,
     });
   }
   const maxDay = Math.max(1, ...days.map((d) => d.count));
@@ -87,7 +88,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Tổng quan</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Sự kiện cào từ web Đoàn trường, client đăng ký và thông báo FCM.
+            Sự kiện cào từ web Đoàn trường, sinh viên đăng ký và thông báo FCM.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -113,21 +114,21 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
+          label="Tổng sinh viên"
+          value={users.length}
+          sub={`${topics.length} topic FCM (15 khoa + 5 khóa)`}
+          tone="indigo"
+        />
+        <StatCard
           label="Tổng sự kiện"
           value={events.length}
-          sub={`${newEvents} sự kiện mới chưa xử lý`}
+          sub={`${openEvents} sự kiện đang mở`}
           tone="indigo"
         />
         <StatCard
-          label="Người dùng"
-          value={clients.length}
-          sub={`${activeClients} đang bật nhận thông báo`}
-          tone="indigo"
-        />
-        <StatCard
-          label="Client đang hoạt động"
-          value={`${activeClients}/${clients.length}`}
-          sub={`${topics.length} topic FCM (15 khoa + 5 khóa)`}
+          label="Slot đã đăng ký"
+          value={`${filledSlots}/${totalSlots}`}
+          sub="Tổng lượt đăng ký trên mọi sự kiện"
           tone="green"
         />
         <StatCard
@@ -147,10 +148,10 @@ export default function DashboardPage() {
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="p-5">
           <h2 className="mb-1 text-base font-semibold text-slate-900 dark:text-white">
-            Sự kiện cào về — 7 ngày qua
+            Sự kiện bắt đầu — 7 ngày qua
           </h2>
           <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
-            Số sự kiện mới theo ngày cào.
+            Số sự kiện theo ngày bắt đầu.
           </p>
           <div className="flex items-end gap-2" style={{ height: 140 }}>
             {days.map((d) => (
@@ -192,16 +193,12 @@ export default function DashboardPage() {
                         {e.title}
                       </p>
                       <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                        {facultyLabel(e.faculty)} — {e.cohorts.map(cohortLabel).join(", ")} ·{" "}
-                        {formatTime(e.scrapedAt)}
+                        {e.major} — K{e.batch} · {formatTime(e.eventTimeStart)} · Slot{" "}
+                        {e.currentSlot}/{e.maxSlot}
                       </p>
                     </div>
-                    <Badge
-                      tone={
-                        e.status === "new" ? "amber" : e.status === "notified" ? "green" : "slate"
-                      }
-                    >
-                      {e.status === "new" ? "Mới" : e.status === "notified" ? "Đã gửi" : "Bỏ qua"}
+                    <Badge tone={e.status === "Open" ? "green" : "slate"}>
+                      {e.status === "Open" ? "Đang mở" : "Đã đóng"}
                     </Badge>
                   </div>
                 </li>
