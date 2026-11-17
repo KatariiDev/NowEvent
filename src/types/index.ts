@@ -82,6 +82,12 @@ export interface NotificationLog {
   successCount?: number;
   failureCount?: number;
   error?: string;
+  /**
+   * Thời gian BE gửi lên FCM (ms) — đo từ lúc BE gọi FCM tới lúc FCM
+   * trả message ID. Đây là thời gian GỬI, không phải thời gian tới máy:
+   * FCM fan-out + điện thoại nhận được thường chậm hơn vài giây.
+   */
+  durationMs?: number;
 }
 
 export interface SendNotificationInput {
