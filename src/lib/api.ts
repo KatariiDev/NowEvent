@@ -151,7 +151,8 @@ export async function createUser(input: Student): Promise<Student> {
   const raw = await apiFetch<StudentApi>("/users", {
     method: "POST",
     body: JSON.stringify({
-      student_id: input.studentId,
+      // BE model.User.StudentID là string — gửi số là Go decode lỗi -> 400.
+      student_id: String(input.studentId),
       student_name: input.studentName,
       gender: input.gender,
       email: input.email,
