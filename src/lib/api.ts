@@ -31,6 +31,10 @@ export function setApiBaseUrl(url: string): void {
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${getApiBaseUrl()}${path}`, {
+    // BE treo thì fetch chờ vô hạn, trang kẹt ở "Đang tải dữ liệu..." phải F5
+    // lại — timeout 10s để lỗi rơi về dữ liệu mẫu (demo) thay vì treo.
+    // Caller vẫn override được bằng init.signal của riêng nó.
+    signal: AbortSignal.timeout(10000),
     ...init,
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
