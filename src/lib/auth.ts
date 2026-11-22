@@ -100,6 +100,9 @@ export async function login(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+      // BE treo (không từ chối kết nối) thì fetch chờ vô hạn, nút đăng nhập
+      // đơ ở "Đang đăng nhập..." — timeout 8s để rơi về đăng nhập demo.
+      signal: AbortSignal.timeout(8000),
     });
   } catch {
     return loginDemoOrThrow(email, password, remember);
