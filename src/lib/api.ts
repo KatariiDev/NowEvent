@@ -29,10 +29,25 @@ export function setApiBaseUrl(url: string): void {
   window.localStorage.setItem(STORAGE_KEY, url.replace(/\/$/, ""));
 }
 
+/**
+ * ngrok free chặn request từ trình duyệt bằng trang cảnh báo "Visit Site" —
+ * header này bỏ qua trang đó. Chỉ gửi khi BE đang qua tunnel ngrok để không
+ * ảnh hưởng kết nối thường: header lạ sẽ kéo theo preflight CORS, nên BE
+ * cũng phải cho phép header này (xem withCORS trong BE).
+ */
+export function ngrokHeaders(baseUrl?: string): Record<string, string> {
+  const base = baseUrl ?? getApiBaseUrl();
+  return base.includes("ngrok") ? { "ngrok-skip-browser-warning": "true" } : {};
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${getApiBaseUrl()}${path}`, {
+    // BE treo thì fetch chờ vô hạn, trang kẹt ở "Đang tải dữ liệu..." phải F5
+    // lại — timeout 10s để lỗi rơi về dữ liệu mẫu (demo) thay vì treo.
+    // Caller vẫn override được bằng init.signal của riêng nó.
+    signal: AbortSignal.timeout(10000),
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    headers: { "Content-Type": "application/json", ...ngrokHeaders(), ...(init?.headers ?? {}) },
   });
   if (!res.ok) {
     let message = `BE trả lỗi ${res.status}`;
@@ -305,7 +320,10 @@ export async function testConnection(
   let lastError: ApiError | null = null;
   for (const path of candidates) {
     try {
-      const res = await fetch(`${base}${path}`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`${base}${path}`, {
+        signal: AbortSignal.timeout(5000),
+        headers: ngrokHeaders(base),
+      });
       if (res.ok) return { ok: true, latencyMs: Date.now() - started };
       lastError = new ApiError(res.status, `BE trả lỗi ${res.status}`);
     } catch (err) {

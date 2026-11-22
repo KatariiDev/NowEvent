@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from "./api";
+import { getApiBaseUrl, ngrokHeaders } from "./api";
 
 export interface AuthUser {
   name: string;
@@ -98,8 +98,11 @@ export async function login(
   try {
     res = await fetch(`${getApiBaseUrl()}/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...ngrokHeaders() },
       body: JSON.stringify({ email, password }),
+      // BE treo (không từ chối kết nối) thì fetch chờ vô hạn, nút đăng nhập
+      // đơ ở "Đang đăng nhập..." — timeout 8s để rơi về đăng nhập demo.
+      signal: AbortSignal.timeout(8000),
     });
   } catch {
     return loginDemoOrThrow(email, password, remember);
